@@ -1,0 +1,1101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ServerOS — System Dashboard</title>
+
+<style>
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    :root {
+        --bg: #080b10;
+        --panel: #0d1117;
+        --panel2: #11161d;
+        --border: #202832;
+        --text: #e6edf3;
+        --muted: #7d8792;
+        --green: #39d98a;
+        --blue: #4da3ff;
+        --yellow: #f5c451;
+        --red: #ff5c5c;
+        --cyan: #45d9ff;
+    }
+
+    body {
+        font-family:
+            Inter,
+            ui-sans-serif,
+            system-ui,
+            -apple-system,
+            BlinkMacSystemFont,
+            "Segoe UI",
+            sans-serif;
+
+        background: var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+    }
+
+    /* =========================
+       TOP BAR
+    ========================= */
+
+    .topbar {
+        height: 64px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 24px;
+        background: #090d12;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .logo {
+        width: 34px;
+        height: 34px;
+        border: 1px solid var(--green);
+        border-radius: 8px;
+        display: grid;
+        place-items: center;
+        color: var(--green);
+        font-weight: 800;
+        font-size: 14px;
+    }
+
+    .brand h1 {
+        font-size: 16px;
+        letter-spacing: .5px;
+    }
+
+    .brand span {
+        display: block;
+        font-size: 11px;
+        color: var(--muted);
+        margin-top: 2px;
+    }
+
+    .system-status {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        font-size: 13px;
+        color: var(--green);
+    }
+
+    .dot {
+        width: 8px;
+        height: 8px;
+        background: var(--green);
+        border-radius: 50%;
+        box-shadow: 0 0 12px var(--green);
+        animation: pulse 1.6s infinite;
+    }
+
+    @keyframes pulse {
+        50% {
+            opacity: .35;
+        }
+    }
+
+    /* =========================
+       LAYOUT
+    ========================= */
+
+    .layout {
+        display: grid;
+        grid-template-columns: 230px 1fr;
+        min-height: calc(100vh - 64px);
+    }
+
+    /* =========================
+       SIDEBAR
+    ========================= */
+
+    .sidebar {
+        border-right: 1px solid var(--border);
+        padding: 20px 12px;
+        background: #090d12;
+    }
+
+    .section-title {
+        color: #4f5965;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 1.4px;
+        padding: 10px 12px;
+        text-transform: uppercase;
+    }
+
+    .nav {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+    }
+
+    .nav-item {
+        padding: 11px 12px;
+        border-radius: 7px;
+        color: var(--muted);
+        font-size: 13px;
+        cursor: pointer;
+        transition: .2s;
+    }
+
+    .nav-item:hover,
+    .nav-item.active {
+        background: #151b23;
+        color: var(--text);
+    }
+
+    .nav-item.active {
+        border-left: 2px solid var(--green);
+        color: var(--green);
+    }
+
+    /* =========================
+       MAIN
+    ========================= */
+
+    main {
+        padding: 28px;
+        max-width: 1600px;
+        width: 100%;
+    }
+
+    .page-header {
+        margin-bottom: 24px;
+    }
+
+    .page-header h2 {
+        font-size: 24px;
+        margin-bottom: 6px;
+    }
+
+    .page-header p {
+        color: var(--muted);
+        font-size: 13px;
+    }
+
+    /* =========================
+       METRICS
+    ========================= */
+
+    .metrics {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 14px;
+        margin-bottom: 18px;
+    }
+
+    .card {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 9px;
+        padding: 18px;
+    }
+
+    .metric-label {
+        font-size: 11px;
+        color: var(--muted);
+        margin-bottom: 9px;
+    }
+
+    .metric-value {
+        font-size: 25px;
+        font-weight: 650;
+    }
+
+    .metric-sub {
+        margin-top: 8px;
+        font-size: 11px;
+        color: var(--muted);
+    }
+
+    .green {
+        color: var(--green);
+    }
+
+    .blue {
+        color: var(--blue);
+    }
+
+    .yellow {
+        color: var(--yellow);
+    }
+
+    /* =========================
+       PROGRESS
+    ========================= */
+
+    .progress {
+        height: 5px;
+        background: #1a2028;
+        border-radius: 5px;
+        overflow: hidden;
+        margin-top: 14px;
+    }
+
+    .progress span {
+        display: block;
+        height: 100%;
+        border-radius: inherit;
+        transition: width .7s ease;
+    }
+
+    .progress.green-bar span {
+        background: var(--green);
+    }
+
+    .progress.blue-bar span {
+        background: var(--blue);
+    }
+
+    .progress.yellow-bar span {
+        background: var(--yellow);
+    }
+
+    /* =========================
+       GRID
+    ========================= */
+
+    .content-grid {
+        display: grid;
+        grid-template-columns: 1.35fr 1fr;
+        gap: 18px;
+    }
+
+    .panel {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 9px;
+        overflow: hidden;
+    }
+
+    .panel-header {
+        height: 48px;
+        border-bottom: 1px solid var(--border);
+        padding: 0 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .panel-header h3 {
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .panel-header span {
+        font-size: 10px;
+        color: var(--muted);
+    }
+
+    /* =========================
+       SERVICES
+    ========================= */
+
+    .service {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 13px 16px;
+        border-bottom: 1px solid #171d24;
+    }
+
+    .service:last-child {
+        border-bottom: 0;
+    }
+
+    .service-left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .service-icon {
+        width: 28px;
+        height: 28px;
+        display: grid;
+        place-items: center;
+        border-radius: 6px;
+        background: #151c23;
+        font-size: 12px;
+    }
+
+    .service-name {
+        font-size: 12px;
+    }
+
+    .service-desc {
+        font-size: 10px;
+        color: var(--muted);
+        margin-top: 3px;
+    }
+
+    .badge {
+        padding: 4px 8px;
+        border-radius: 20px;
+        font-size: 9px;
+        border: 1px solid;
+    }
+
+    .badge.running {
+        color: var(--green);
+        border-color: #1e6646;
+        background: #0c2118;
+    }
+
+    .badge.stopped {
+        color: var(--red);
+        border-color: #653030;
+        background: #220e0e;
+    }
+
+    /* =========================
+       TERMINAL
+    ========================= */
+
+    .terminal {
+        background: #070a0e;
+        min-height: 260px;
+        padding: 16px;
+        font-family: "Cascadia Code", "Fira Code", monospace;
+        font-size: 11px;
+        line-height: 1.8;
+        overflow: hidden;
+    }
+
+    .terminal-line {
+        color: #a9b4bf;
+    }
+
+    .terminal-line .prompt {
+        color: var(--green);
+    }
+
+    .terminal-line .command {
+        color: var(--text);
+    }
+
+    .terminal-line .success {
+        color: var(--green);
+    }
+
+    .terminal-line .info {
+        color: var(--cyan);
+    }
+
+    /* =========================
+       NETWORK
+    ========================= */
+
+    .network {
+        padding: 16px;
+    }
+
+    .network-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 11px 0;
+        border-bottom: 1px solid #171d24;
+        font-size: 12px;
+    }
+
+    .network-row:last-child {
+        border: 0;
+    }
+
+    .network-row span:first-child {
+        color: var(--muted);
+    }
+
+    /* =========================
+       FOOTER
+    ========================= */
+
+    .footer {
+        margin-top: 18px;
+        display: flex;
+        justify-content: space-between;
+        color: #58616c;
+        font-size: 10px;
+    }
+
+    /* =========================
+       RESPONSIVE
+    ========================= */
+
+    @media(max-width: 1000px) {
+        .metrics {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .content-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media(max-width: 700px) {
+        .layout {
+            grid-template-columns: 1fr;
+        }
+
+        .sidebar {
+            display: none;
+        }
+
+        main {
+            padding: 16px;
+        }
+
+        .metrics {
+            grid-template-columns: 1fr;
+        }
+
+        .topbar {
+            padding: 0 14px;
+        }
+    }
+</style>
+</head>
+
+<body>
+
+<!-- =========================
+     TOP BAR
+========================= -->
+
+<header class="topbar">
+
+    <div class="brand">
+        <div class="logo">S</div>
+
+        <div>
+            <h1>ServerOS</h1>
+            <span>Virtual Server Environment</span>
+        </div>
+    </div>
+
+    <div class="system-status">
+        <div class="dot"></div>
+        SYSTEM ONLINE
+    </div>
+
+</header>
+
+
+<div class="layout">
+
+    <!-- =========================
+         SIDEBAR
+    ========================= -->
+
+    <aside class="sidebar">
+
+        <div class="section-title">
+            System
+        </div>
+
+        <nav class="nav">
+
+            <div class="nav-item active">
+                Dashboard
+            </div>
+
+            <div class="nav-item">
+                Terminal
+            </div>
+
+            <div class="nav-item">
+                Processes
+            </div>
+
+            <div class="nav-item">
+                Services
+            </div>
+
+        </nav>
+
+
+        <div class="section-title">
+            Infrastructure
+        </div>
+
+        <nav class="nav">
+
+            <div class="nav-item">
+                Network
+            </div>
+
+            <div class="nav-item">
+                Storage
+            </div>
+
+            <div class="nav-item">
+                Containers
+            </div>
+
+        </nav>
+
+
+        <div class="section-title">
+            Administration
+        </div>
+
+        <nav class="nav">
+
+            <div class="nav-item">
+                Logs
+            </div>
+
+            <div class="nav-item">
+                Settings
+            </div>
+
+        </nav>
+
+    </aside>
+
+
+    <!-- =========================
+         MAIN
+    ========================= -->
+
+    <main>
+
+        <div class="page-header">
+            <h2>System Overview</h2>
+            <p>
+                ServerOS is running normally. All core services are operational.
+            </p>
+        </div>
+
+
+        <!-- =========================
+             METRICS
+        ========================= -->
+
+        <section class="metrics">
+
+            <div class="card">
+
+                <div class="metric-label">
+                    CPU USAGE
+                </div>
+
+                <div class="metric-value green" id="cpu">
+                    18%
+                </div>
+
+                <div class="progress green-bar">
+                    <span id="cpuBar" style="width:18%"></span>
+                </div>
+
+                <div class="metric-sub">
+                    4 vCPU · Normal
+                </div>
+
+            </div>
+
+
+            <div class="card">
+
+                <div class="metric-label">
+                    MEMORY
+                </div>
+
+                <div class="metric-value blue" id="ram">
+                    42%
+                </div>
+
+                <div class="progress blue-bar">
+                    <span id="ramBar" style="width:42%"></span>
+                </div>
+
+                <div class="metric-sub">
+                    1.7 GB / 4 GB
+                </div>
+
+            </div>
+
+
+            <div class="card">
+
+                <div class="metric-label">
+                    STORAGE
+                </div>
+
+                <div class="metric-value yellow">
+                    37%
+                </div>
+
+                <div class="progress yellow-bar">
+                    <span style="width:37%"></span>
+                </div>
+
+                <div class="metric-sub">
+                    14.8 GB / 40 GB
+                </div>
+
+            </div>
+
+
+            <div class="card">
+
+                <div class="metric-label">
+                    UPTIME
+                </div>
+
+                <div class="metric-value">
+                    <span id="uptime">03:21:48</span>
+                </div>
+
+                <div class="metric-sub green">
+                    ● Stable
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =========================
+             CONTENT
+        ========================= -->
+
+        <section class="content-grid">
+
+
+            <!-- SERVICES -->
+
+            <div class="panel">
+
+                <div class="panel-header">
+                    <h3>Core Services</h3>
+                    <span>6 services</span>
+                </div>
+
+
+                <div class="service">
+
+                    <div class="service-left">
+
+                        <div class="service-icon">
+                            N
+                        </div>
+
+                        <div>
+                            <div class="service-name">
+                                nginx
+                            </div>
+
+                            <div class="service-desc">
+                                HTTP reverse proxy
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="badge running">
+                        RUNNING
+                    </div>
+
+                </div>
+
+
+                <div class="service">
+
+                    <div class="service-left">
+
+                        <div class="service-icon">
+                            P
+                        </div>
+
+                        <div>
+                            <div class="service-name">
+                                PHP-FPM
+                            </div>
+
+                            <div class="service-desc">
+                                PHP application runtime
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="badge running">
+                        RUNNING
+                    </div>
+
+                </div>
+
+
+                <div class="service">
+
+                    <div class="service-left">
+
+                        <div class="service-icon">
+                            M
+                        </div>
+
+                        <div>
+                            <div class="service-name">
+                                MySQL
+                            </div>
+
+                            <div class="service-desc">
+                                Database server
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="badge running">
+                        RUNNING
+                    </div>
+
+                </div>
+
+
+                <div class="service">
+
+                    <div class="service-left">
+
+                        <div class="service-icon">
+                            D
+                        </div>
+
+                        <div>
+                            <div class="service-name">
+                                Docker
+                            </div>
+
+                            <div class="service-desc">
+                                Container runtime
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="badge running">
+                        RUNNING
+                    </div>
+
+                </div>
+
+
+                <div class="service">
+
+                    <div class="service-left">
+
+                        <div class="service-icon">
+                            S
+                        </div>
+
+                        <div>
+                            <div class="service-name">
+                                SSH
+                            </div>
+
+                            <div class="service-desc">
+                                Secure shell server
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="badge running">
+                        RUNNING
+                    </div>
+
+                </div>
+
+
+                <div class="service">
+
+                    <div class="service-left">
+
+                        <div class="service-icon">
+                            C
+                        </div>
+
+                        <div>
+                            <div class="service-name">
+                                Cron
+                            </div>
+
+                            <div class="service-desc">
+                                Scheduled task manager
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="badge running">
+                        RUNNING
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- TERMINAL -->
+
+            <div class="panel">
+
+                <div class="panel-header">
+                    <h3>System Terminal</h3>
+                    <span>/root</span>
+                </div>
+
+
+                <div class="terminal">
+
+                    <div class="terminal-line">
+                        <span class="prompt">root@serveros</span>:~# uname -a
+                    </div>
+
+                    <div class="terminal-line info">
+                        ServerOS kernel 6.8.0-server x86_64
+                    </div>
+
+                    <br>
+
+                    <div class="terminal-line">
+                        <span class="prompt">root@serveros</span>:~# systemctl status serveros
+                    </div>
+
+                    <div class="terminal-line success">
+                        ● serveros.service — ServerOS Core
+                    </div>
+
+                    <div class="terminal-line">
+                        &nbsp;&nbsp;Loaded: loaded
+                    </div>
+
+                    <div class="terminal-line">
+                        &nbsp;&nbsp;Active: <span class="success">active (running)</span>
+                    </div>
+
+                    <div class="terminal-line">
+                        &nbsp;&nbsp;PID: 1024
+                    </div>
+
+                    <br>
+
+                    <div class="terminal-line">
+                        <span class="prompt">root@serveros</span>:~# _
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- NETWORK -->
+
+            <div class="panel">
+
+                <div class="panel-header">
+                    <h3>Network</h3>
+                    <span>eth0</span>
+                </div>
+
+                <div class="network">
+
+                    <div class="network-row">
+                        <span>Interface</span>
+                        <strong>eth0</strong>
+                    </div>
+
+                    <div class="network-row">
+                        <span>IPv4 Address</span>
+                        <strong>192.168.1.20</strong>
+                    </div>
+
+                    <div class="network-row">
+                        <span>Gateway</span>
+                        <strong>192.168.1.1</strong>
+                    </div>
+
+                    <div class="network-row">
+                        <span>Download</span>
+                        <strong class="green">2.4 MB/s</strong>
+                    </div>
+
+                    <div class="network-row">
+                        <span>Upload</span>
+                        <strong class="blue">840 KB/s</strong>
+                    </div>
+
+                    <div class="network-row">
+                        <span>Connection</span>
+                        <strong class="green">CONNECTED</strong>
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- LOGS -->
+
+            <div class="panel">
+
+                <div class="panel-header">
+                    <h3>System Events</h3>
+                    <span>LIVE</span>
+                </div>
+
+                <div class="terminal" style="min-height:220px">
+
+                    <div class="terminal-line">
+                        <span class="success">[ OK ]</span>
+                        ServerOS initialized
+                    </div>
+
+                    <div class="terminal-line">
+                        <span class="success">[ OK ]</span>
+                        Network interface online
+                    </div>
+
+                    <div class="terminal-line">
+                        <span class="success">[ OK ]</span>
+                        SSH service started
+                    </div>
+
+                    <div class="terminal-line">
+                        <span class="success">[ OK ]</span>
+                        Docker daemon started
+                    </div>
+
+                    <div class="terminal-line">
+                        <span class="success">[ OK ]</span>
+                        Database connection established
+                    </div>
+
+                    <div class="terminal-line">
+                        <span class="info">[INFO]</span>
+                        ServerOS monitoring active
+                    </div>
+
+                    <div class="terminal-line">
+                        <span class="success">[ OK ]</span>
+                        All systems operational
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <div class="footer">
+
+            <span>
+                ServerOS v0.1.0
+            </span>
+
+            <span>
+                Local System · Secure Mode
+            </span>
+
+            <span>
+                Last update: <span id="clock">--:--:--</span>
+            </span>
+
+        </div>
+
+    </main>
+
+</div>
+
+
+<script>
+
+    /* =========================
+       LIVE CPU / RAM SIMULATION
+    ========================= */
+
+    function updateMetrics() {
+
+        let cpu = Math.floor(Math.random() * 25) + 10;
+        let ram = Math.floor(Math.random() * 15) + 38;
+
+        document.getElementById("cpu").textContent =
+            cpu + "%";
+
+        document.getElementById("cpuBar").style.width =
+            cpu + "%";
+
+        document.getElementById("ram").textContent =
+            ram + "%";
+
+        document.getElementById("ramBar").style.width =
+            ram + "%";
+    }
+
+    setInterval(updateMetrics, 2000);
+
+
+    /* =========================
+       CLOCK
+    ========================= */
+
+    function updateClock() {
+
+        const now = new Date();
+
+        document.getElementById("clock").textContent =
+            now.toLocaleTimeString();
+    }
+
+    setInterval(updateClock, 1000);
+
+    updateClock();
+
+
+    /* =========================
+       UPTIME
+    ========================= */
+
+    let seconds = (3 * 3600) + (21 * 60) + 48;
+
+    function updateUptime() {
+
+        seconds++;
+
+        let h = Math.floor(seconds / 3600);
+        let m = Math.floor((seconds % 3600) / 60);
+        let s = seconds % 60;
+
+        h = String(h).padStart(2, "0");
+        m = String(m).padStart(2, "0");
+        s = String(s).padStart(2, "0");
+
+        document.getElementById("uptime").textContent =
+            `${h}:${m}:${s}`;
+    }
+
+    setInterval(updateUptime, 1000);
+
+</script>
+
+</body>
+</html>
